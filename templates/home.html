@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-3" style="border: 1px solid black;">
+
+<h1 style="display: flex; justify-content: center;">Welcome To Chat U </h1>
+<div class="container">
+<form method="post" id="post-form" action="checkview">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label class="form-label">Room name:</label>
+      <input type="text" class="form-control" id="room_name" aria-describedby="emailHelp" name="room_name">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" class="form-control" id="username" aria-describedby="emailHelp" name="username">
+      </div>
+    <button type="submit" class="btn btn-info container-fluid">Enter Room</button>
+  </form>
+  <br>
+</div>
+
+</div>
+
+{% endblock %}

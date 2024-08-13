@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    
+    .container {
+      border: 2px solid #dedede;
+      background-color: #f1f1f1;
+      border-radius: 5px;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    
+    .darker {
+      border-color: #ccc;
+      background-color: #ddd;
+    }
+    
+    .container::after {
+      content: "";
+      clear: both;
+      display: table;
+    }
+    
+    .container img {
+      float: left;
+      max-width: 60px;
+      width: 100%;
+      margin-right: 20px;
+      border-radius: 50%;
+    }
+    
+    .container img.right {
+      float: right;
+      margin-left: 20px;
+      margin-right:0;
+    }
+    
+    .time-right {
+      float: right;
+      color: #aaa;
+    }
+    
+    .time-left {
+      float: left;
+      color: #999;
+    }
+    </style>
+<div id="display">
+
+
+    
+    </div>
+    <script>
+   
+    document.addEventListener('DOMContentLoaded', function() {
+
+        setInterval(function() {
+            fetch("/getMessages/{{room}}/")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data);
+                    const display = document.getElementById("display");
+                    display.innerHTML = ""; 
+    
+                    data.messages.forEach(message => {
+                        const temp = `
+                            <div class='container darker' id="message-${message.id}">
+                                <b>${message.user}</b>
+                                <p>${message.value}</p>
+                                <span class='time-left'>${message.date}</span>
+                                <button class="btn btn-danger btn-sm delete-btn" data-id="${message.id}">Delete</button>
+                            </div>`;
+                        display.insertAdjacentHTML('beforeend', temp);
+                    });
+    
+                    // Add event listeners for the delete buttons
+                    document.querySelectorAll('.delete-btn').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const messageId = this.getAttribute('data-id');
+                            
+                            fetch(`/deleteMessage/${messageId}/`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'X-CSRFToken': document.querySelector('input[name=csrfmiddlewaretoken]').value
+                                }
+                            })
+                            .then(response => {
+                                if (response.ok) {
+                                    // Remove the message from the DOM
+                                    document.getElementById(`message-${messageId}`).remove();
+                                } else {
+                                    alert('Error deleting message');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('There was a problem with the delete operation:', error);
+                            });
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                    alert('An error occurred');
+                });
+        }, 1000);
+        
+    });
+    
+         
+</script>
+
+
+<div class="container mt-3" style="width: 50%; border: 1px solid black;">
+    <h1>{{ room }} - Room</h1>
+    <b><span>Welcome, {{ username }}</span></b>
+<form id="post-form">
+    {% csrf_token %}
+    <input type="hidden" name="username" id="username" value="{{username}}"/>
+    <input type="hidden" name="room_id" id="room_id" value="{{room_details.id}}"/>
+    <label for="message">Enter your Message:</label>
+    <input type="text" class="form-control" name="message" id="message" width="100px" />
+    <br>
+    <input type="submit" value="Send" class="btn btn-primary container-fluid">
+    <br>
+</form>
+<br>
+</div>
+
+<script type="text/javascript">
+document.getElementById('post-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append('username', document.getElementById('username').value);
+    formData.append('room_id', document.getElementById('room_id').value);
+    formData.append('message', document.getElementById('message').value);
+    formData.append('csrfmiddlewaretoken', document.querySelector('input[name=csrfmiddlewaretoken]').value);
+
+    fetch('/send', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.text()) 
+    .then(data => {
+        // alert(data);
+        document.getElementById('message').value = '';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+});
+
+</script>
+
+
+{% endblock content %}
