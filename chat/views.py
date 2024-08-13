@@ -58,3 +58,4 @@ def delete_message(request, message_id):
         except Message.DoesNotExist:
             return JsonResponse({'error': 'Message not found'}, status=404)
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
